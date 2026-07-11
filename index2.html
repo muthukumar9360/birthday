@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Balloon Wishes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            color: #fff;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(255, 244, 230, 0.34), transparent 32%),
+                radial-gradient(circle at 14% 26%, rgba(255, 122, 162, 0.28), transparent 28%),
+                radial-gradient(circle at 86% 68%, rgba(139, 92, 246, 0.36), transparent 32%),
+                linear-gradient(135deg, #ff9dc0 0%, #7c4dff 45%, #1f103f 100%);
+        }
+
+        .glass {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .balloon-card {
+            position: relative;
+            min-height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+            cursor: pointer;
+            perspective: 900px;
+            transform-style: preserve-3d;
+            transition: transform 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+        }
+
+        .balloon-card::before {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            opacity: 0;
+            pointer-events: none;
+            background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.28), transparent 58%);
+            transform: translateX(-60%) rotate(12deg);
+            transition: opacity 0.35s ease, transform 0.7s ease;
+        }
+
+        .balloon-card:hover {
+            transform: translateY(-10px) rotateX(8deg) rotateY(-7deg);
+            background: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 28px 60px rgba(31, 16, 63, 0.38);
+        }
+
+        .balloon-card:hover::before {
+            opacity: 1;
+            transform: translateX(45%) rotate(12deg);
+        }
+
+        .balloon-btn {
+            position: relative;
+            width: 108px;
+            height: 138px;
+            border: 0;
+            cursor: pointer;
+            background: transparent;
+            transform-origin: bottom center;
+            animation: floatBalloon 3.8s ease-in-out infinite;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .balloon-card:nth-child(2) .balloon-btn { animation-delay: 0.2s; }
+        .balloon-card:nth-child(3) .balloon-btn { animation-delay: 0.4s; }
+        .balloon-card:nth-child(4) .balloon-btn { animation-delay: 0.6s; }
+        .balloon-card:nth-child(5) .balloon-btn { animation-delay: 0.8s; }
+        .balloon-card:nth-child(6) .balloon-btn { animation-delay: 1s; }
+        .balloon-card:nth-child(7) .balloon-btn { animation-delay: 1.2s; }
+        .balloon-card:nth-child(8) .balloon-btn { animation-delay: 1.4s; }
+        .balloon-card:nth-child(9) .balloon-btn { animation-delay: 1.6s; }
+
+        .balloon-btn:hover {
+            transform: translateY(-12px) scale(1.5);
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.45));
+        }
+
+        .balloon {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 96px;
+            height: 118px;
+            border-radius: 50% 50% 45% 45%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, var(--balloon-light), var(--balloon-main) 58%, var(--balloon-dark));
+            box-shadow: inset -14px -16px 24px rgba(0, 0, 0, 0.18), inset 12px 12px 18px rgba(255, 255, 255, 0.24);
+            transform-style: preserve-3d;
+        }
+
+        .balloon::before {
+            content: "";
+            position: absolute;
+            top: 18px;
+            left: 22px;
+            width: 18px;
+            height: 32px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.38);
+            transform: rotate(28deg);
+        }
+
+        .balloon::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -9px;
+            width: 18px;
+            height: 16px;
+            background: var(--balloon-dark);
+            clip-path: polygon(50% 0, 100% 100%, 0 100%);
+            transform: translateX(-50%);
+        }
+
+        .string {
+            position: absolute;
+            left: 50%;
+            top: 116px;
+            width: 2px;
+            height: 54px;
+            background: rgba(255, 255, 255, 0.65);
+            transform: translateX(-50%);
+        }
+
+        .wish-message {
+            position: absolute;
+            inset: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            text-align: center;
+            border-radius: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(22px) rotateX(14deg) scale(0.88);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+            transition: opacity 0.5s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+        }
+
+        .balloon-card.popped .balloon-btn {
+            pointer-events: none;
+            animation: popAway 0.34s ease forwards;
+        }
+
+        .balloon-card.popped .wish-message {
+            opacity: 1;
+            transform: translateY(0) rotateX(0deg) scale(1);
+            animation: messageGlow 1.2s ease both;
+        }
+
+        .balloon-card.popped {
+            transform: translateY(-6px) rotateX(0deg) rotateY(0deg);
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .burst-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--dot-color);
+            pointer-events: none;
+            animation: burstOut 0.75s ease-out forwards;
+        }
+
+        .cracker-line {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 68px;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, var(--dot-color), transparent);
+            pointer-events: none;
+            transform-origin: left center;
+            animation: crackerShoot 0.85s ease-out forwards;
+        }
+
+        .spark-star {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+            background: var(--dot-color);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 56%, 79% 91%, 50% 70%, 21% 91%, 32% 56%, 2% 35%, 39% 35%);
+            animation: starPop 0.95s ease-out forwards;
+        }
+
+        .balloon-shard {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 28px;
+            border-radius: 10px 10px 4px 4px;
+            background: linear-gradient(145deg, var(--balloon-light), var(--balloon-main));
+            pointer-events: none;
+            animation: shardFly 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .ring-pop {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(255, 244, 230, 0.85);
+            border-radius: 999px;
+            pointer-events: none;
+            animation: ringPop 0.9s ease-out forwards;
+        }
+
+        .floating-gift {
+            position: fixed;
+            left: var(--x);
+            bottom: -80px;
+            z-index: 0;
+            font-size: var(--size);
+            line-height: 1;
+            opacity: 0.24;
+            pointer-events: none;
+            filter: drop-shadow(0 10px 18px rgba(31, 16, 63, 0.28));
+            animation: giftFloat var(--dur) linear forwards;
+        }
+
+        @keyframes floatBalloon {
+            0%, 100% {
+                transform: translateY(0) rotate(-2deg);
+            }
+
+            50% {
+                transform: translateY(-12px) rotate(2deg);
+            }
+        }
+
+        @keyframes popAway {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            55% {
+                opacity: 1;
+                transform: scale(1.22);
+                filter: brightness(1.4);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-70px) scale(0.12) rotate(35deg);
+            }
+        }
+
+        @keyframes burstOut {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.2);
+            }
+        }
+
+        @keyframes crackerShoot {
+            0% {
+                opacity: 1;
+                transform: rotate(var(--angle)) translateX(0) scaleX(0.25);
+            }
+
+            100% {
+                opacity: 0;
+                transform: rotate(var(--angle)) translateX(var(--distance)) scaleX(1);
+            }
+        }
+
+        @keyframes starPop {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) rotate(0deg) scale(0.2);
+            }
+
+            35% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(240deg) scale(1.1);
+            }
+        }
+
+        @keyframes shardFly {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) rotate(0deg) scale(0.8);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--rot)) scale(0.35);
+            }
+        }
+
+        @keyframes ringPop {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.2);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(7);
+            }
+        }
+
+        @keyframes messageGlow {
+            0% {
+                filter: drop-shadow(0 0 0 rgba(255, 244, 230, 0));
+            }
+
+            45% {
+                filter: drop-shadow(0 0 22px rgba(255, 244, 230, 0.75));
+            }
+
+            100% {
+                filter: drop-shadow(0 10px 18px rgba(31, 16, 63, 0.25));
+            }
+        }
+
+        @keyframes giftFloat {
+            0% {
+                transform: translate3d(0, 0, 0) rotate(-10deg) scale(0.75);
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 0.72;
+            }
+
+            100% {
+                transform: translate3d(var(--drift), -120vh, 0) rotate(26deg) scale(1.08);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="min-h-screen px-4 py-2 sm:px-8">
+        <!-- Added relative class to the main container for positioning the absolute button -->
+        <section class="glass relative mx-auto max-w-6xl rounded-[32px] border border-white/20 bg-white/10 p-6 shadow-2xl sm:p-8">
+            
+            <!-- Next Page Button Container -->
+            <div class="absolute top-5 right-6 z-10">
+                <button id="nextPageBtn" class="pointer-events-none opacity-0 scale-95 translate-y-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-1 px-3 rounded-full shadow-lg border border-white/30 transform transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400">
+                    Next Page
+                </button>
+            </div>
+
+            <div class="mb-5 text-center">
+                <p class="text-xl font-bold uppercase tracking-[0.45em] text-pink-100">Pop The Balloons</p>
+            </div>
+
+            <div id="balloonGrid" class="grid gap-5 md:grid-cols-3">
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 1" style="--balloon-main:#ff4d88;--balloon-light:#ff9dbe;--balloon-dark:#c51f62;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 1">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are kind.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 2" style="--balloon-main:#8b5cf6;--balloon-light:#c4b5fd;--balloon-dark:#5b21b6;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 2">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are beautiful.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 3" style="--balloon-main:#f59e0b;--balloon-light:#fde68a;--balloon-dark:#b45309;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 3">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are precious.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 4" style="--balloon-main:#06b6d4;--balloon-light:#a5f3fc;--balloon-dark:#0e7490;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 4">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are lovely.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 5" style="--balloon-main:#ec4899;--balloon-light:#fbcfe8;--balloon-dark:#be185d;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 5">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are strong.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 6" style="--balloon-main:#22c55e;--balloon-light:#bbf7d0;--balloon-dark:#15803d;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 6">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are magical.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 7" style="--balloon-main:#fb7185;--balloon-light:#fecdd3;--balloon-dark:#be123c;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 7">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are joyful.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 8" style="--balloon-main:#a855f7;--balloon-light:#e9d5ff;--balloon-dark:#7e22ce;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 8">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are graceful.</p></div>
+                </div>
+
+                <div class="balloon-card" tabindex="0" role="button" aria-label="Pop balloon 9" style="--balloon-main:#f97316;--balloon-light:#fed7aa;--balloon-dark:#c2410c;">
+                    <button class="balloon-btn" type="button" aria-label="Pop balloon 9">
+                        <span class="balloon"></span><span class="string"></span>
+                    </button>
+                    <div class="wish-message"><p class="text-2xl font-black text-[#fff4e6]">You are loved.</p></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const cards = Array.from(document.querySelectorAll('.balloon-card'));
+        const nextBtn = document.getElementById('nextPageBtn');
+        const dotColors = ['#fff4e6', '#ff7aa2', '#8b5cf6', '#ffd166', '#ffffff'];
+
+        // Handler to navigate to the next page
+        nextBtn.addEventListener('click', () => {
+            window.location.href = 'index3.html'; // Adjust this to your target page URL
+        });
+
+        // Function to check if all balloons have been popped
+        function checkAllPopped() {
+            const allPopped = cards.every(card => card.classList.contains('popped'));
+            if (allPopped) {
+                // Reveal the button with a smooth entrance animation
+                nextBtn.classList.remove('pointer-events-none', 'opacity-0', 'scale-95', 'translate-y-2');
+                nextBtn.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+            }
+        }
+
+        function createBurst(card) {
+            const ring = document.createElement('span');
+            ring.className = 'ring-pop';
+            card.appendChild(ring);
+            setTimeout(() => ring.remove(), 950);
+
+            for (let i = 0; i < 26; i += 1) {
+                const dot = document.createElement('span');
+                const angle = (Math.PI * 2 * i) / 26;
+                const distance = 75 + Math.random() * 70;
+                dot.className = 'burst-dot';
+                dot.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+                dot.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+                dot.style.setProperty('--dot-color', dotColors[Math.floor(Math.random() * dotColors.length)]);
+                card.appendChild(dot);
+                setTimeout(() => dot.remove(), 800);
+            }
+
+            for (let i = 0; i < 12; i += 1) {
+                const shard = document.createElement('span');
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 70 + Math.random() * 105;
+                shard.className = 'balloon-shard';
+                shard.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+                shard.style.setProperty('--y', `${Math.sin(angle) * distance - 30}px`);
+                shard.style.setProperty('--rot', `${Math.random() * 520 - 260}deg`);
+                card.appendChild(shard);
+                setTimeout(() => shard.remove(), 1100);
+            }
+
+            for (let i = 0; i < 14; i += 1) {
+                const cracker = document.createElement('span');
+                const angle = (360 / 14) * i;
+                cracker.className = 'cracker-line';
+                cracker.style.setProperty('--angle', `${angle}deg`);
+                cracker.style.setProperty('--distance', `${80 + Math.random() * 55}px`);
+                cracker.style.setProperty('--dot-color', dotColors[Math.floor(Math.random() * dotColors.length)]);
+                card.appendChild(cracker);
+                setTimeout(() => cracker.remove(), 900);
+            }
+
+            for (let i = 0; i < 10; i += 1) {
+                const star = document.createElement('span');
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 55 + Math.random() * 95;
+                star.className = 'spark-star';
+                star.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+                star.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+                star.style.setProperty('--dot-color', dotColors[Math.floor(Math.random() * dotColors.length)]);
+                card.appendChild(star);
+                setTimeout(() => star.remove(), 1000);
+            }
+        }
+
+        function spawnFloatingGift() {
+            const floating = document.createElement('span');
+            floating.className = 'floating-gift';
+            floating.textContent = '🎈';
+            floating.style.setProperty('--x', `${Math.random() * 96}vw`);
+            floating.style.setProperty('--size', `${24 + Math.random() * 28}px`);
+            floating.style.setProperty('--dur', `${8 + Math.random() * 7}s`);
+            floating.style.setProperty('--drift', `${Math.random() * 160 - 80}px`);
+            document.body.appendChild(floating);
+            setTimeout(() => floating.remove(), 15500);
+        }
+
+        function popBalloon(card) {
+            if (card.classList.contains('popped')) return;
+            card.classList.add('popped');
+            createBurst(card);
+            for (let i = 0; i < 4; i += 1) {
+                setTimeout(spawnFloatingGift, i * 160);
+            }
+            // Check if this was the last balloon popped
+            checkAllPopped();
+        }
+
+        cards.forEach((card) => {
+            card.addEventListener('pointermove', (event) => {
+                if (card.classList.contains('popped')) return;
+                const rect = card.getBoundingClientRect();
+                const x = (event.clientX - rect.left) / rect.width - 0.5;
+                const y = (event.clientY - rect.top) / rect.height - 0.5;
+                card.style.transform = `translateY(-10px) rotateX(${-y * 10}deg) rotateY(${x * 10}deg)`;
+            });
+
+            card.addEventListener('pointerleave', () => {
+                if (card.classList.contains('popped')) return;
+                card.style.transform = '';
+            });
+
+            card.addEventListener('click', () => {
+                popBalloon(card);
+            });
+
+            card.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    popBalloon(card);
+                }
+            });
+        });
+
+        setInterval(spawnFloatingGift, 100);
+    </script>
+</body>
+
+</html>

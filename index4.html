@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>The Book of Precious Memories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blush: '#ff7aa2',
+                        lilac: '#8b5cf6',
+                        cream: '#fff4e6',
+                        rose: '#ff4d88',
+                        gold: '#fbbf24'
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --vh100: 100dvh;
+            --mouse-x: 0.5;
+            --mouse-y: 0.5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overscroll-behavior: none;
+            background: #0b071e;
+        }
+
+        body {
+            font-family: 'Inter', 'Trebuchet MS', sans-serif;
+            height: var(--vh100);
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            perspective: 2000px;
+        }
+
+        /* Dynamic Interactive Canvas Backdrop */
+        .dynamic-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(circle at calc(var(--mouse-x) * 100%) calc(var(--mouse-y) * 100%), rgba(255, 122, 162, 0.2) 0%, transparent 45%),
+                radial-gradient(circle at calc(100% - var(--mouse-x) * 100%) calc(100% - var(--mouse-y) * 100%), rgba(139, 92, 246, 0.25) 0%, transparent 50%),
+                linear-gradient(135deg, #110726 0%, #06020f 100%);
+            transition: background 0.1s ease;
+        }
+
+        .dynamic-bg::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.15;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg) translateY(calc(var(--mouse-y) * -30px)) translateZ(-100px);
+            transform-origin: top center;
+            mask-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 1) 70%);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px rgba(255, 255, 255, 0.08) solid;
+        }
+
+        /* App Layout Frame */
+        .app-shell {
+            height: var(--vh100);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: max(1.5rem, env(safe-area-inset-top));
+            padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .app-header,
+        .app-footer {
+            flex: 0 0 auto;
+            pointer-events: auto;
+        }
+
+        .app-main {
+            flex: 1 1 auto;
+            min-height: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            pointer-events: auto;
+        }
+
+        /* 3D Container & Centering Engine */
+        .scene-container {
+            perspective: 2500px;
+            transform-style: preserve-3d;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .book-anchor {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.35, 1);
+            transform: translateX(0px);
+        }
+
+        .book-anchor.shift-center {
+            /* Changed to positive to perfectly balance your 25% page offset layout */
+            transform: translateX(calc(min(58dvh, 560px) * 0.72 / 2));
+        }
+
+        .book-anchor.shift-back {
+            /* Smoothly pulls the left-side back cover into the screen center */
+            transform: translateX(calc(min(125dvh, 800px) * 0.8 / 2));
+        }
+
+        .book-wrapper {
+            position: relative;
+            height: min(58dvh, 560px);
+            aspect-ratio: 0.72;
+            width: auto;
+            max-width: 400px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease, box-shadow 0.6s ease;
+            /* Center the spine inside the container */
+            margin-left: calc(min(58dvh, 560px) * 0.72 / -2); 
+        }
+
+        /* 3D Page Engine */
+        .book-page {
+            position: absolute;
+            top: 0;
+            left: 25%; /* Move pages to start from the center spine line */
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform-origin: left center; /* Pages pivot from the spine */
+            transition: transform 1.2s cubic-bezier(0.25, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        /* Outer borders/shadow lines visible ONLY while the book is turning sheets */
+        .book-page.is-turning .page-face {
+            outline: 1px rgba(255, 255, 255, 0.15) solid;
+        }
+
+        .page-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 4px 18px 18px 4px;
+            box-shadow: inset 4px 0 12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            pointer-events: auto;
+            background: #fffcf7;
+        }
+
+        .page-back {
+            transform: rotateY(180deg);
+            border-radius: 18px 4px 4px 18px;
+            box-shadow: inset -4px 0 12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Covers Styling overrides to strip borders on fully closed state */
+        .cover-front {
+            border-radius: 6px 20px 20px 6px !important;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), inset 2px 2px 5px rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .cover-back {
+            border-radius: 20px 6px 6px 20px !important;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), inset -2px 2px 5px rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Book Spine Gradient Shadows */
+        .spine-shadow-left {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.05) 15%, transparent 100%);
+        }
+
+        .spine-shadow-right {
+            background: linear-gradient(270deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.05) 15%, transparent 100%);
+        }
+
+        /* Turning Actions mapping */
+        .book-page.flipped {
+            transform: rotateY(-180deg);
+        }
+
+        /* Page lighting sweeps during active transformation */
+        .book-page.is-turning .page-face::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.4) 50%, transparent 65%);
+            mix-blend-mode: overlay;
+            animation: lightSweep 1.2s ease forwards;
+        }
+
+        @keyframes lightSweep {
+            0% {
+                transform: translateX(-150%);
+            }
+
+            100% {
+                transform: translateX(150%);
+            }
+        }
+
+        /* Ambient Orbs */
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            opacity: 0.3;
+            pointer-events: none;
+            filter: blur(40px);
+            animation: floatMotion 12s infinite ease-in-out;
+        }
+
+        @keyframes floatMotion {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(40px, -60px) scale(1.2);
+            }
+        }
+
+        /* Custom Interactivity Trailing Particle */
+        .mouse-trail {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(to right, #ff7aa2, #8b5cf6);
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            animation: trailFade 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes trailFade {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+                filter: drop-shadow(0 0 4px #ff7aa2);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Interactive Floating Embellishments */
+        .magical-sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: elementFloatUp 4s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+            z-index: 90;
+        }
+
+        @keyframes elementFloatUp {
+            0% {
+                transform: translateY(30px) scale(0.3) rotate(0deg);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(-180px) translateX(var(--drift-x, 40px)) scale(1.2) rotate(var(--spin-r, 45deg));
+                opacity: 0;
+            }
+        }
+
+        /* Custom Content Overlays */
+        .photo-frame {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Responsive Breakpoints adjustments */
+        @media (max-width: 640px) {
+            .book-wrapper {
+                height: min(50dvh, 420px);
+            }
+
+            .book-anchor.is-open {
+                transform: translateX(calc(min(37vw, 150px) / 2));
+            }
+        }
+    </style>
+</head>
+
+<body class="select-none">
+
+    <!-- Interactive Canvas Background -->
+    <div class="dynamic-bg" id="interactiveBg">
+        <div class="ambient-orb w-[300px] h-[300px] bg-blush left-[10%] top-[20%]" style="animation-delay: 0s;"></div>
+        <div class="ambient-orb w-[400px] h-[400px] bg-lilac right-[15%] bottom-[10%]" style="animation-delay: -4s;">
+        </div>
+    </div>
+
+    <!-- Interface Structure Frame -->
+    <div class="app-shell px-6 relative">
+        
+        <!-- Next Page Navigation Action Portal (Top Right Frame Position) -->
+        <!-- Added pointer-events-auto wrapper to force clicking capability inside shell layout -->
+        <div class="absolute top-[max(2.5rem,env(safe-area-inset-top))] right-6 z-[9999] pointer-events-auto">
+            <button id="nextPageBtn" class="pointer-events-none opacity-0 scale-95 translate-y-2 bg-gradient-to-r from-blush via-rose to-lilac text-white font-bold py-2.5 px-6 rounded-full shadow-lg border border-white/20 transform transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-rose/50">
+                Next Page
+            </button>
+        </div>
+
+        <header class="app-header text-center mt-2">
+            <h1
+                class="text-3xl md:text-5xl font-extrabold tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-cream via-blush to-white drop-shadow-xl font-sans uppercase">
+                Chapters Of Us
+            </h1>
+            <p class="text-purple-200/60 text-xs md:text-sm mt-2 tracking-widest font-medium">
+                An Immersive 3D Interactive Memory Keepsake
+            </p>
+        </header>
+
+        <!-- Main Workspace Area -->
+        <main class="app-main">
+            <div class="scene-container" id="cardinalScene">
+                <div class="book-anchor" id="anchorPlatform">
+                    <div class="book-wrapper" id="masterBook3D">
+
+                        <!-- ================= COVER FRONT (PAGE 1) ================= -->
+                        <div class="book-page" id="blockPage1" style="z-index: 100;">
+                            <!-- Front face -->
+                            <div
+                                class="page-face cover-front bg-gradient-to-br from-[#3b1154] via-[#1a0933] to-[#0d041a] p-8 flex flex-col justify-between text-center select-none border-r border-white/10">
+                                <div class="absolute inset-4 border-2 border-gold/20 rounded-xl pointer-events-none">
+                                </div>
+                                <div class="absolute inset-5 border border-white/5 rounded-lg pointer-events-none">
+                                </div>
+                                <div class="absolute -right-20 -top-20 w-40 h-40 bg-blush/20 rounded-full blur-3xl">
+                                </div>
+
+                                <div class="text-[11px] font-black tracking-[0.4em] text-gold/80 mt-4 uppercase">Volume
+                                    I • Collectors Edition</div>
+
+                                <div class="my-auto transform translate-z-10 z-10 space-y-4">
+                                    <span
+                                        class="text-6xl block transform hover:scale-125 transition-transform duration-300 cursor-pointer">✨</span>
+                                    <h2
+                                        class="font-['Great_Vibes'] text-5xl md:text-6xl text-cream leading-tight drop-shadow-2xl">
+                                        The Book of<br><span
+                                            class="text-blush font-sans font-black tracking-wider text-3xl md:text-4xl block mt-2">PRECIOUS
+                                            MEMORIES</span>
+                                    </h2>
+                                    <div
+                                        class="w-24 h-[1px] bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto mt-4">
+                                    </div>
+                                </div>
+
+                                <div class="mb-4 text-[10px] text-white/40 tracking-[0.25em] uppercase font-semibold">
+                                    Tap below or use buttons to open</div>
+                            </div>
+
+                            <!-- Back face (Page 1 Content) -->
+                            <div class="page-face page-back p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-left absolute inset-y-0 left-0 w-12 pointer-events-none"></div>
+                                <div
+                                    class="text-right text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 1</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-lilac font-semibold">Every Beautiful Story Has A Beginning</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-2">
+                                        <p>Some people enter our lives quietly without asking for attention yet somehow they become a beautiful part of our everyday moments.</p>
+                                        <p>This little book isn't about counting days,it's about remembering the smiles,the laughter, the random conversations and the memories that made those days special.</p>
+                                        <p class="font-bold text-neutral-700">Today is all about celebrating you.</p>
+                                        <p class="text-rose text-base font-sans font-bold">Happy Birthday. 🌸</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Introduction —
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ================= PAGE 2 (SPREAD 1) ================= -->
+                        <div class="book-page" id="blockPage2" style="z-index: 90;">
+                            <!-- Front Face (Page 2 Content) -->
+                            <div class="page-face p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-right absolute inset-y-0 right-0 w-12 pointer-events-none">
+                                </div>
+                                <div
+                                    class="text-left text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 2</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-rose font-semibold">The Beginning</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-2">
+                                        <p>Who would have thought</p>
+                                        <p>that a simple conversation</p>
+                                        <p>could become so many unforgettable memories?</p>
+                                        <p class="pt-2">From random "Hi"</p>
+                                        <p>to endless conversations, every little</p>
+                                        <p>moment slowly became a chapter</p>
+                                        <p>worth remembering.</p>
+                                        <p class="pt-2 italic font-medium text-neutral-700">Some beginnings are ordinary,</p>
+                                        <p class="italic font-medium text-neutral-700">ours was unexpectedly beautiful.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Chapter I —
+                                </div>
+                            </div>
+
+                            <!-- Back Face (Page 3 Content) -->
+                            <div class="page-face page-back p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-left absolute inset-y-0 left-0 w-12 pointer-events-none"></div>
+                                <div
+                                    class="text-right text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 3</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-purple-600 font-semibold">The Little Things</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-700 font-serif space-y-1">
+                                        <p class="font-medium text-neutral-800 mb-2">The best memories were never planned.</p>
+                                        <p>The random jokes and late replies</p>
+                                        <p>The unnecessary teasing.</p>
+                                        <p>The unexpected conversations.</p>
+                                        <p>The small laughs.</p>
+                                        <p>The tiny moments that somehow</p>
+                                        <p>become the biggest memories.</p>
+                                        <p class="pt-3 italic font-semibold text-purple-700">Sometimes,</p>
+                                        <p class="italic font-semibold text-purple-700">the smallest moments</p>
+                                        <p class="italic font-semibold text-purple-700">leave the deepest smiles.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Chapter II —
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ================= PAGE 3 (SPREAD 2) ================= -->
+                        <div class="book-page" id="blockPage3" style="z-index: 80;">
+                            <!-- Front Face (Page 4 Content) -->
+                            <div class="page-face p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-right absolute inset-y-0 right-0 w-12 pointer-events-none">
+                                </div>
+                                <div
+                                    class="text-left text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 4</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-indigo-600 font-semibold">A Collection Of Smiles</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-2">
+                                        <p>Thank you for every smile</p>
+                                        <p>that happened without a reason.</p>
+                                        <p>Thank you for every conversation</p>
+                                        <p>that made an ordinary day</p>
+                                        <p>feel a little brighter.</p>
+                                        <p class="pt-3 font-medium text-neutral-800">Some memories don't need photographs.</p>
+                                        <p class="font-medium text-neutral-800">They stay safely inside our hearts forever.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Chapter III —
+                                </div>
+                            </div>
+
+                            <!-- Back Face (Page 5 Content) -->
+                            <div class="page-face page-back p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-left absolute inset-y-0 left-0 w-12 pointer-events-none"></div>
+                                <div
+                                    class="text-right text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 5</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-emerald-600 font-semibold">The Person You Are</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-2">
+                                        <p class="font-medium text-neutral-800 mb-2">You have something beautiful</p>
+                                        <p class="font-medium text-neutral-800 mb-2">that not everyone notices.</p>
+                                        <p class="text-emerald-700 font-semibold">Your kindness.</p>
+                                        <p class="text-emerald-700 font-semibold">Your strength.</p>
+                                        <p class="text-emerald-700 font-semibold">Your determination.</p>
+                                        <p class="text-emerald-700 font-semibold">Your way of making people feel comfortable.</p>
+                                        <p class="pt-3 text-neutral-850 font-medium">Never lose those qualities.</p>
+                                        <p class="font-bold text-neutral-900">They are rare.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Appreciation —
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ================= PAGE 4 (SPREAD 3) ================= -->
+                        <div class="book-page" id="blockPage4" style="z-index: 70;">
+                            <!-- Front Face (Page 6 Content) -->
+                            <div class="page-face p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-right absolute inset-y-0 right-0 w-12 pointer-events-none">
+                                </div>
+                                <div
+                                    class="text-left text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 6</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-amber-600 font-semibold">For Your Future</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-2">
+                                        <p>May every dream</p>
+                                        <p>find its way to you.</p>
+                                        <p>May every difficult road</p>
+                                        <p>lead to something beautiful.</p>
+                                        <p>May the universe</p>
+                                        <p>always guide you</p>
+                                        <p>towards the happiness</p>
+                                        <p>you truly deserve.</p>
+                                        <p class="pt-2 font-medium text-amber-700">May your smile</p>
+                                        <p class="font-medium text-amber-700">never lose its reason.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Wishes —
+                                </div>
+                            </div>
+
+                            <!-- Back Face (Page 7 Content) -->
+                            <div class="page-face page-back p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-left absolute inset-y-0 left-0 w-12 pointer-events-none"></div>
+                                <div
+                                    class="text-right text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 7</div>
+
+                                <div class="my-auto space-y-3 px-2">
+                                    <h3 class="font-['Great_Vibes'] text-3xl text-pink-600 font-semibold">A Birthday Wish</h3>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-1.5">
+                                        <p class="font-medium text-neutral-800 mb-1">May this year bring you</p>
+                                        <p>more peace than worries,</p>
+                                        <p>more laughter than tears,</p>
+                                        <p>more achievements than expectations,</p>
+                                        <p>more beautiful surprises than ordinary days,</p>
+                                        <p class="pt-1">and countless reasons</p>
+                                        <p class="pb-2">to believe in yourself.</p>
+                                        <p class="pt-2 border-t border-pink-100 font-bold text-neutral-800">You deserve every beautiful thing</p>
+                                        <p class="font-bold text-neutral-800">life has to offer.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Blessings —
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ================= PAGE 5 (BACK COVER / CLOSURE) ================= -->
+                        <div class="book-page" id="blockPage5" style="z-index: 60;">
+                            <!-- Front Face (Page 8 Content) -->
+                            <div class="page-face p-6 flex flex-col justify-between text-center">
+                                <div class="spine-shadow-right absolute inset-y-0 right-0 w-12 pointer-events-none">
+                                </div>
+                                <div
+                                    class="text-left text-[10px] font-black text-neutral-400 tracking-widest uppercase">
+                                    📖 Page 8</div>
+
+                                <div class="my-auto text-center space-y-3 px-2">
+                                    <span class="text-4xl block animate-pulse">🎂</span>
+                                    <h3 class="font-['Great_Vibes'] text-4xl text-rose leading-none font-semibold">Happy Birthday</h3>
+                                    <div class="w-16 h-[2px] bg-blush/40 mx-auto rounded-full my-1"></div>
+                                    <div class="text-xs md:text-sm leading-relaxed text-neutral-600 font-serif space-y-2">
+                                        <p>No matter how many birthdays come,</p>
+                                        <p>I hope this one becomes</p>
+                                        <p class="font-medium text-neutral-800">the beginning of your happiest chapter.</p>
+                                        <p>May your dreams become reality.</p>
+                                        <p>May the universe always choose</p>
+                                        <p>the brightest path for you.</p>
+                                    </div>
+                                    <span class="font-sans font-bold text-base text-lilac block mt-2">Happy Birthday. 🎂✨</span>
+                                </div>
+                                <div class="text-center text-[11px] text-neutral-400 font-bold font-serif">— Celebration —
+                                </div>
+                            </div>
+
+                            <!-- Back Face (Outer Back Cover) -->
+                            <div
+                                class="page-face page-back cover-back bg-gradient-to-bl from-[#3b1154] via-[#1a0933] to-[#0d041a] p-8 flex flex-col items-center justify-center text-center border-l border-white/10">
+                                <div class="absolute inset-4 border-2 border-gold/10 rounded-xl pointer-events-none">
+                                </div>
+                                <span class="text-4xl text-gold/60 mb-2">✨</span>
+                                <h4 class="font-sans font-black text-xs tracking-[0.3em] text-cream uppercase">The
+                                    Horizon</h4>
+                                <p class="text-[10px] text-white/40 tracking-wider mt-3 max-w-[200px] leading-relaxed">
+                                    Close the book folder to securely preserve the memories, or turn backwards to relive
+                                    the timeline.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Relocated Bottom Navigation System -->
+        <footer class="app-footer w-full max-w-lg flex flex-col items-center gap-4 px-4">
+
+            <!-- Standard Unified Arrow Controls -->
+            <div class="flex items-center justify-center gap-8 w-full">
+                <button id="prevBtn"
+                    class="glass border border-white/10 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-90 hover:bg-blush/20 hover:border-blush/40 group focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 transform group-hover:-translate-x-1 transition-transform" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <button id="quickToggleBtn"
+                    class="px-8 py-3.5 bg-gradient-to-r from-blush via-rose to-lilac rounded-full text-white font-black text-xs tracking-[0.25em] uppercase shadow-2xl hover:shadow-rose/40 transition-all duration-300 hover:scale-[1.05] focus:outline-none">
+                </button>
+
+                <button id="nextBtn"
+                    class="glass border border-white/10 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-90 hover:bg-blush/20 hover:border-blush/40 group focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 transform group-hover:translate-x-1 transition-transform" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Contextual Progress Tracker dots -->
+            <div class="flex gap-2.5 items-center justify-center pb-2" id="paginationBar">
+                <span class="w-2.5 h-2.5 rounded-full bg-white transition-all duration-300" data-index="0"></span>
+                <span class="w-2 h-2 rounded-full bg-white/20 transition-all duration-300" data-index="1"></span>
+                <span class="w-2 h-2 rounded-full bg-white/20 transition-all duration-300" data-index="2"></span>
+                <span class="w-2 h-2 rounded-full bg-white/20 transition-all duration-300" data-index="3"></span>
+                <span class="w-2 h-2 rounded-full bg-white/20 transition-all duration-300" data-index="4"></span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Script Architecture Framework -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const masterBook = document.getElementById("masterBook3D");
+            const anchorPlatform = document.getElementById("anchorPlatform");
+            const interactiveBg = document.getElementById("interactiveBg");
+            const sceneContainer = document.getElementById("cardinalScene");
+
+            const prevBtn = document.getElementById("prevBtn");
+            const nextBtn = document.getElementById("nextBtn");
+            const quickToggleBtn = document.getElementById("quickToggleBtn");
+            const paginationDots = document.querySelectorAll("#paginationBar > span");
+            const nextPageBtn = document.getElementById("nextPageBtn");
+
+            const pages = [
+                document.getElementById("blockPage1"),
+                document.getElementById("blockPage2"),
+                document.getElementById("blockPage3"),
+                document.getElementById("blockPage4"),
+                document.getElementById("blockPage5")
+            ];
+
+            let currentPage = 0;
+            const totalPagesCount = pages.length;
+            const FLIP_LOCKOUT_MS = 1200;
+            let isAnimating = false;
+
+            // Tracks mouse matrix vectors globally
+            let lastMouseX = window.innerWidth / 2;
+            let lastMouseY = window.innerHeight / 2;
+            let targetRotationX = 0;
+            let targetRotationY = 0;
+            let currentRotationX = 0;
+            let currentRotationY = 0;
+
+            // Next page action router
+            nextPageBtn.addEventListener("click", () => {
+                window.location.href = "index6.html"; // Adjust to your next target URL destination
+            });
+
+            function runRenderLoop() {
+                // Smooth interpolation for the 3D book rotation matrix
+                currentRotationX += (targetRotationX - currentRotationX) * 0.1;
+                currentRotationY += (targetRotationY - currentRotationY) * 0.1;
+
+                masterBook.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
+                requestAnimationFrame(runRenderLoop);
+            }
+            requestAnimationFrame(runRenderLoop);
+
+            function updateInteractiveState() {
+                // Check what state the book layout is in
+                const isMiddleSpread = currentPage > 0 && currentPage < totalPagesCount;
+                const isLastPage = currentPage === totalPagesCount;
+                
+                // Toggle the exact layout shifts dynamically
+                anchorPlatform.classList.toggle("shift-center", isMiddleSpread);
+                anchorPlatform.classList.toggle("shift-back", isLastPage);
+
+                // Dynamically reveal next page button exactly when the last page is turned open
+                if (isLastPage) {
+                    nextPageBtn.classList.remove('pointer-events-none', 'opacity-0', 'scale-95', 'translate-y-2');
+                    nextPageBtn.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+                } else {
+                    nextPageBtn.classList.add('pointer-events-none', 'opacity-0', 'scale-95', 'translate-y-2');
+                    nextPageBtn.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
+                }
+
+                pages.forEach((page, idx) => {
+                    const isFlipped = idx < currentPage;
+                    const previouslyFlipped = page.classList.contains("flipped");
+
+                    if (isFlipped !== previouslyFlipped) {
+                        page.classList.add("is-turning");
+                        setTimeout(() => {
+                            page.classList.remove("is-turning");
+                        }, FLIP_LOCKOUT_MS);
+                    }
+
+                    page.classList.toggle("flipped", isFlipped);
+
+                    // Dynamic Open-Book Z-Index Engine:
+                    if (!isFlipped) {
+                        // Right-hand pages stack descending (Page 1 on top, Page 2 underneath, etc.)
+                        page.style.zIndex = totalPagesCount - idx;
+                    } else {
+                        // Left-hand pages stack ascending (Page 1 at bottom, newest turned page on top)
+                        page.style.zIndex = idx;
+                    }
+
+                    // Keep ALL turned pages visible so both sides stay populated like a real book!
+                    page.style.visibility = "visible";
+                });
+
+                // Pagination Indicator Syncing
+                paginationDots.forEach((dot, idx) => {
+                    if (idx === currentPage) {
+                        dot.style.width = '24px';
+                        dot.style.borderRadius = '6px';
+                        dot.classList.remove("bg-white/20");
+                        dot.classList.add("bg-gradient-to-r", "from-blush", "to-rose");
+                    } else {
+                        dot.style.width = '8px';
+                        dot.style.borderRadius = '9999px';
+                        dot.classList.add("bg-white/20");
+                        dot.classList.remove("bg-gradient-to-r", "from-blush", "to-rose");
+                    }
+                });
+
+                // Contextual Title updates
+                if (currentPage === 0) {
+                    quickToggleBtn.textContent = "";
+                } else if (currentPage === totalPagesCount) {
+                    quickToggleBtn.textContent = "";
+                } else {
+                    quickToggleBtn.textContent = ``;
+                }
+            }
+
+            function handleForwardAction() {
+                if (isAnimating || currentPage >= totalPagesCount) return;
+                isAnimating = true;
+                currentPage++;
+                updateInteractiveState();
+                spawnMagicalBurst(20);
+                setTimeout(() => isAnimating = false, FLIP_LOCKOUT_MS);
+            }
+
+            function handleBackwardAction() {
+                if (isAnimating || currentPage <= 0) return;
+                isAnimating = true;
+                currentPage--;
+                updateInteractiveState();
+                spawnMagicalBurst(15);
+                setTimeout(() => isAnimating = false, FLIP_LOCKOUT_MS);
+            }
+
+            function handleQuickToggleAction() {
+                if (isAnimating) return;
+                isAnimating = true;
+                currentPage = (currentPage > 0) ? 0 : totalPagesCount;
+                updateInteractiveState();
+                spawnMagicalBurst(35);
+                setTimeout(() => isAnimating = false, FLIP_LOCKOUT_MS);
+            }
+
+            // Click Handlers on Buttons
+            nextBtn.addEventListener("click", handleForwardAction);
+            prevBtn.addEventListener("click", handleBackwardAction);
+            quickToggleBtn.addEventListener("click", handleQuickToggleAction);
+
+            // Direct page surface click bindings
+            pages.forEach((page, index) => {
+                page.addEventListener("click", (e) => {
+                    const metrics = page.getBoundingClientRect();
+                    const computedHorizontalOffset = e.clientX - metrics.left;
+
+                    if (computedHorizontalOffset > metrics.width / 2) {
+                        if (index === currentPage) handleForwardAction();
+                    } else {
+                        if (index === currentPage - 1) handleBackwardAction();
+                    }
+                });
+            });
+
+            // Smooth Cursor Interactivity & Background Tracking
+            window.addEventListener("mousemove", (e) => {
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+
+                const normX = e.clientX / window.innerWidth;
+                const normY = e.clientY / window.innerHeight;
+
+                document.documentElement.style.setProperty('--mouse-x', normX);
+                document.documentElement.style.setProperty('--mouse-y', normY);
+
+                // Creates 3D depth parallax vectors based on the workspace orientation
+                const boundaryX = (normX - 0.5) * 2; // Range -1 to 1
+                const boundaryY = (normY - 0.5) * 2;
+
+                targetRotationY = boundaryX * 18;
+                targetRotationX = -boundaryY * 12;
+
+                // Spawns fluid particle trailing array dynamically
+                if (Math.random() < 0.25) {
+                    createFluidParticleTrail(e.clientX, e.clientY);
+                }
+            });
+
+            function createFluidParticleTrail(x, y) {
+                const particle = document.createElement("div");
+                particle.className = "mouse-trail";
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 800);
+            }
+
+            function spawnMagicalBurst(density) {
+                const elementShapes = ['❤️', '✨', '🌸', '🎵', '💫', '💎'];
+                const dynamicHues = ['#ff7aa2', '#8b5cf6', '#fff4e6', '#ff4d88', '#fbbf24'];
+
+                for (let i = 0; i < density; i++) {
+                    const spark = document.createElement("div");
+                    spark.className = "magical-sparkle text-base md:text-lg select-none";
+                    spark.textContent = elementShapes[Math.floor(Math.random() * elementShapes.length)];
+
+                    spark.style.setProperty('--drift-x', `${(Math.random() * 200) - 100}px`);
+                    spark.style.setProperty('--spin-r', `${(Math.random() * 90) - 45}deg`);
+
+                    // Center spawning calculation vectors
+                    spark.style.left = `calc(50% + ${(Math.random() * 240) - 120}px)`;
+                    spark.style.top = `calc(50% + ${(Math.random() * 240) - 120}px)`;
+                    spark.style.color = dynamicHues[Math.floor(Math.random() * dynamicHues.length)];
+                    spark.style.animationDuration = `${2.5 + Math.random() * 1.5}s`;
+
+                    document.body.appendChild(spark);
+                    setTimeout(() => spark.remove(), 4000);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Music Memories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            color: #fff;
+            background: radial-gradient(circle at top, #ff9dc0 0%, #7c4dff 45%, #1f103f 100%);
+        }
+
+        .glass {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .next-page-btn {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            z-index: 20;
+        }
+
+        .memory-card {
+            min-height: 300px;
+            perspective: 1200px;
+            animation: floatCard 4.5s ease-in-out infinite;
+        }
+
+        .memory-card:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .memory-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        .memory-card:nth-child(4) {
+            animation-delay: 0.9s;
+        }
+
+        .memory-card:nth-child(5) {
+            animation-delay: 1.2s;
+        }
+
+        .memory-card:nth-child(6) {
+            animation-delay: 1.5s;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            min-height: 300px;
+            transform-style: preserve-3d;
+            transition: transform 0.75s cubic-bezier(0.2, 0.9, 0.2, 1), filter 0.35s ease;
+        }
+
+        .memory-card:hover .card-inner {
+            transform: translateY(-14px) rotateX(7deg) rotateY(-7deg);
+        }
+
+        .memory-card.active {
+            animation: jumpCard 0.7s ease both;
+        }
+
+        .memory-card.active .card-inner {
+            transform: translateY(-20px) rotateY(180deg);
+            filter: drop-shadow(0 0 30px rgba(255, 122, 162, 0.85));
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            min-height: 300px;
+            overflow: hidden;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            backface-visibility: hidden;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 24px 55px rgba(0, 0, 0, 0.28);
+        }
+
+        .card-back {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 28px;
+            text-align: center;
+            transform: rotateY(180deg);
+            background:
+                radial-gradient(circle at top, rgba(255, 255, 255, 0.26), transparent 45%),
+                linear-gradient(145deg, rgba(255, 77, 136, 0.76), rgba(139, 92, 246, 0.76));
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-shade {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            background: linear-gradient(180deg, transparent 34%, rgba(22, 8, 46, 0.9));
+        }
+
+        .music-bars {
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            gap: 6px;
+            height: 54px;
+            margin-top: 8px;
+        }
+
+        .music-bars span {
+            width: 8px;
+            height: 18px;
+            border-radius: 999px;
+            background: #fff4e6;
+            animation: soundBars 0.8s ease-in-out infinite;
+        }
+
+        .music-bars span:nth-child(2) {
+            animation-delay: 0.12s;
+        }
+
+        .music-bars span:nth-child(3) {
+            animation-delay: 0.24s;
+        }
+
+        .music-bars span:nth-child(4) {
+            animation-delay: 0.36s;
+        }
+
+        @keyframes floatCard {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes jumpCard {
+            0% {
+                transform: translateY(0) scale(1);
+            }
+
+            45% {
+                transform: translateY(-30px) scale(1.03);
+            }
+
+            100% {
+                transform: translateY(-12px) scale(1.01);
+            }
+        }
+
+        @keyframes soundBars {
+
+            0%,
+            100% {
+                height: 16px;
+                opacity: 0.65;
+            }
+
+            50% {
+                height: 48px;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="min-h-screen px-4 py-5 sm:px-8">
+        <section
+            class="glass relative mx-auto max-w-7xl rounded-[32px] border border-white/20 bg-white/10 shadow-2xl">
+            <a href="index4.html"
+                class="next-page-btn rounded-full bg-white/90 px-5 py-1 text-sm font-bold text-slate-900 shadow-xl transition hover:scale-105 hover:bg-white">
+                Next Page
+            </a>
+            <div class="text-center">
+                <p class="text-xl font-bold uppercase tracking-[0.2em] text-pink-100 pt-2 pb-6">Music Memories (Tap a memory card to play its song)</p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3 px-8 pb-3">
+                <button class="memory-card text-left" type="button" data-audio="audio/music/a4.mp3">
+                    <div class="card-inner">
+                        <div class="card-face">
+                            <img class="card-image" src="audio/images/1.avif" alt="Teddy memory">
+                            <div class="card-shade">
+                                <p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-100">Memory 01</p>
+                                <h2 class="mt-2 text-2xl font-black text-white">Teddy Smile</h2>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <p class="text-sm font-bold uppercase tracking-[0.3em] text-pink-100">Now Playing</p>
+                            <h3 class="text-3xl font-black text-[#fff4e6]">Teddy Smile</h3>
+                            <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+                            <p class="text-sm leading-6 text-pink-50">A soft song for a warm little memory.</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="memory-card text-left" type="button" data-audio="audio/music/a2.mp3">
+                    <div class="card-inner">
+                        <div class="card-face">
+                            <img class="card-image"
+                                src="audio/images/2.jpg"
+                                alt="Heart lights">
+                            <div class="card-shade">
+                                <p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-100">Memory 02</p>
+                                <h2 class="mt-2 text-2xl font-black text-white">Heart Lights</h2>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <p class="text-sm font-bold uppercase tracking-[0.3em] text-pink-100">Now Playing</p>
+                            <h3 class="text-3xl font-black text-[#fff4e6]">Heart Lights</h3>
+                            <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+                            <p class="text-sm leading-6 text-pink-50">A glowing track for all the bright moments.</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="memory-card text-left" type="button" data-audio="audio/music/a1.mp3">
+                    <div class="card-inner">
+                        <div class="card-face">
+                            <img class="card-image"
+                                src="audio/images/3.jpg"
+                                alt="Birthday balloons">
+                            <div class="card-shade">
+                                <p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-100">Memory 03</p>
+                                <h2 class="mt-2 text-2xl font-black text-white">Balloon Day</h2>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <p class="text-sm font-bold uppercase tracking-[0.3em] text-pink-100">Now Playing</p>
+                            <h3 class="text-3xl font-black text-[#fff4e6]">Balloon Day</h3>
+                            <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+                            <p class="text-sm leading-6 text-pink-50">A happy beat for smiles and celebrations.</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="memory-card text-left" type="button" data-audio="audio/music/a5.mp3">
+                    <div class="card-inner">
+                        <div class="card-face">
+                            <img class="card-image"
+                                src="audio/images/4.jpeg"
+                                alt="Birthday cake">
+                            <div class="card-shade">
+                                <p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-100">Memory 04</p>
+                                <h2 class="mt-2 text-2xl font-black text-white">Cake Wish</h2>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <p class="text-sm font-bold uppercase tracking-[0.3em] text-pink-100">Now Playing</p>
+                            <h3 class="text-3xl font-black text-[#fff4e6]">Cake Wish</h3>
+                            <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+                            <p class="text-sm leading-6 text-pink-50">A sweet tune for one beautiful wish.</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="memory-card text-left" type="button" data-audio="audio/music/a6.mp3">
+                    <div class="card-inner">
+                        <div class="card-face">
+                            <img class="card-image"
+                                src="audio/images/5.jpg"
+                                alt="Party lights">
+                            <div class="card-shade">
+                                <p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-100">Memory 05</p>
+                                <h2 class="mt-2 text-2xl font-black text-white">Party Glow</h2>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <p class="text-sm font-bold uppercase tracking-[0.3em] text-pink-100">Now Playing</p>
+                            <h3 class="text-3xl font-black text-[#fff4e6]">Party Glow</h3>
+                            <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+                            <p class="text-sm leading-6 text-pink-50">A dancing rhythm for a sparkling night.</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="memory-card text-left" type="button" data-audio="audio/music/a3.mp3">
+                    <div class="card-inner">
+                        <div class="card-face">
+                            <img class="card-image"
+                                src="audio/images/6.jpg"
+                                alt="Gift box">
+                            <div class="card-shade">
+                                <p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-100">Memory 06</p>
+                                <h2 class="mt-2 text-2xl font-black text-white">Little Gift</h2>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <p class="text-sm font-bold uppercase tracking-[0.3em] text-pink-100">Now Playing</p>
+                            <h3 class="text-3xl font-black text-[#fff4e6]">Little Gift</h3>
+                            <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+                            <p class="text-sm leading-6 text-pink-50">A gentle melody for a precious surprise.</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const cards = Array.from(document.querySelectorAll('.memory-card'));
+        let activeCard = null;
+        let activeAudio = null;
+
+        cards.forEach((card) => {
+            card.addEventListener('click', () => {
+                const audioPath = card.dataset.audio;
+
+                if (activeAudio) {
+                    activeAudio.pause();
+                    activeAudio.currentTime = 0;
+                }
+
+                if (activeCard && activeCard !== card) {
+                    activeCard.classList.remove('active');
+                }
+
+                if (activeCard === card) {
+                    card.classList.remove('active');
+                    activeCard = null;
+                    activeAudio = null;
+                    return;
+                }
+
+                card.classList.add('active');
+                activeCard = card;
+                activeAudio = new Audio(audioPath);
+                activeAudio.play().catch(() => {
+                    console.warn('Audio file not found or playback blocked:', audioPath);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>The Wish Chronicle • Birthday Matrix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        theaterVoid: '#040207',
+                        charityEmerald: '#059669',
+                        charityGold: '#fbbf24',
+                        charityRose: '#f43f5e',
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #040207;
+            font-family: 'Inter', sans-serif;
+            color: #f8fafc;
+        }
+
+        .ambient-universe {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: 
+                radial-gradient(circle at 50% 20%, rgba(251, 191, 38, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.08) 0%, transparent 50%),
+                linear-gradient(135deg, #06030f 0%, #010103 100%);
+            pointer-events: none;
+        }
+
+        /* 3D Scene Space setup */
+        .stage-container {
+            perspective: 2500px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D Kinetic Elements */
+        .glass-board {
+            background: rgba(13, 9, 29, 0.7);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8), 0 0 40px rgba(251, 191, 38, 0.03);
+            transform: translateZ(0px) rotateX(5deg);
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+        }
+
+        .celebration-journal-card {
+            background: #ffffff;
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 60px rgba(251, 191, 38, 0.2);
+            border: 1px solid rgba(251, 191, 38, 0.4);
+            transform: rotateY(-90deg) translateZ(300px) scale(0.8);
+            opacity: 0;
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.8s ease;
+            transform-style: preserve-3d;
+        }
+
+        .celebration-journal-card.active {
+            transform: rotateY(0deg) translateZ(0px) scale(1);
+            opacity: 1;
+        }
+
+        /* Premium Token Dynamics */
+        .game-token {
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease, background-color 0.2s;
+            cursor: pointer;
+        }
+        .game-token:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+        .token-selected {
+            outline: 3px solid #fbbf24;
+            outline-offset: -3px;
+            box-shadow: 0 0 25px rgba(251, 191, 38, 0.6);
+            transform: scale(1.1) !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            z-index: 40;
+        }
+
+        /* Floating Sparkles */
+        .sparkle-flare {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            animation: burstOut 0.7s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes burstOut {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+            100% { transform: translate(var(--tw-tx, 0px), var(--tw-ty, 0px)) scale(1.5); opacity: 0; }
+        }
+
+        /* Smoothly fading out overlay for text screens */
+        .thankyou-layer {
+            transform: translateZ(100px) scale(0.9);
+            opacity: 0;
+            transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.8s ease;
+            pointer-events: none;
+        }
+        .thankyou-layer.active {
+            transform: translateZ(0px) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-universe"></div>
+
+    <div class="relative w-full h-screen z-10 flex flex-col justify-between p-4 md:p-6">
+        
+        <!-- Header HUD -->
+        <header id="mainHeader" class="w-full max-w-5xl mx-auto flex justify-between items-center transition-all duration-700">
+            <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                    <span class="w-2 h-2 rounded-full bg-charityGold animate-pulse"></span>
+                    <span class="text-[9px] font-black tracking-[0.35em] text-charityGold uppercase font-mono">Keepsake Game Engine Active</span>
+                </div>
+                <h1 class="text-lg md:text-2xl font-black text-white tracking-wide uppercase">The Sweet Blessing Matrix</h1>
+            </div>
+            
+            <div class="bg-white/5 border border-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl flex items-center gap-4 md:gap-6 font-mono text-xs">
+                <div>
+                    <span class="text-white/40 block text-[9px] uppercase tracking-wider">Score</span>
+                    <span id="scoreDisplay" class="text-charityGold font-bold text-base md:text-lg">0</span><span class="text-white/30">/500</span>
+                </div>
+                <div class="w-[1px] h-6 bg-white/10"></div>
+                <div>
+                    <span class="text-white/40 block text-[9px] uppercase tracking-wider">Target</span>
+                    <span id="targetStatusText" class="text-charityEmerald font-bold text-xs md:text-sm">Unlock Wish Slate</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Stage Area -->
+        <main class="w-full max-w-5xl mx-auto flex-1 flex items-center justify-center stage-container relative my-2">
+            
+            <!-- STEP 1: MATCH-3 MATRIX -->
+            <div id="gameScreen" class="w-full max-w-md glass-board rounded-3xl p-4 scale-100 block">
+                <div class="text-center mb-4">
+                    <p class="text-[10px] font-mono tracking-widest text-charityGold uppercase">Match 3 items horizontally or vertically to score</p>
+                </div>
+                <div id="gridContainer" class="grid grid-cols-6 gap-2 bg-black/40 rounded-2xl p-2 relative aspect-square w-full">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- STEP 2: MULTI-AXIS 3D SLATE OVERLAY -->
+            <div id="surpriseScreen" class="absolute hidden flex-col items-center justify-center w-full max-w-4xl px-4 z-20">
+                <div id="wishJournalCard" class="celebration-journal-card text-slate-800 rounded-3xl overflow-hidden w-full grid grid-cols-1 md:grid-cols-12 relative">
+                    
+                    <div class="absolute top-4 left-4 text-2xl animate-bounce">🎁</div>
+                    <div class="absolute top-4 right-4 text-2xl animate-pulse">✨</div>
+                    
+                    <!-- Left Column Information Card Panel -->
+                    <div class="md:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6 md:p-8 flex flex-col justify-between text-center md:text-left border-b md:border-b-0 md:border-r border-slate-800 relative">
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,38,0.1),transparent_60%)] pointer-events-none"></div>
+                        
+                        <div class="relative z-10 my-auto md:my-0">
+                            <span class="text-[9px] font-black tracking-[0.25em] font-mono uppercase bg-charityGold/10 text-charityGold px-3 py-1 rounded-full border border-charityGold/20">
+                                Matrix Chapter Cleared
+                            </span>
+                            <h2 class="font-['Great_Vibes'] text-5xl md:text-6xl text-white mt-6 mb-4 leading-tight">
+                                Happy Birthday!
+                            </h2>
+                            <p class="text-xs text-slate-400 font-medium leading-relaxed mb-6">
+                                You unlocked the secret wish vault! Write down your top 5 birthday wishes below. Once submitted, your choices will instantly bundle and route directly over to my WhatsApp!
+                            </p>
+                        </div>
+
+                        <div class="relative z-10 bg-white/5 border border-white/10 rounded-2xl p-4 text-center hidden md:block">
+                            <span class="text-4xl mb-1 block">🎂</span>
+                            <p class="text-[10px] font-mono uppercase tracking-widest text-charityEmerald font-bold">Status: Awaiting Wishes</p>
+                        </div>
+                    </div>
+
+                    <!-- Right Column Interactive Form Fields -->
+                    <div class="md:col-span-7 p-6 md:p-8 bg-slate-50 flex flex-col justify-between">
+                        <div>
+                            <div class="mb-4">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Your Wish Vault</h3>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:ring-2 focus-within:ring-charityGold/40 focus-within:border-charityGold transition-all">
+                                    <label class="block text-[9px] font-bold text-charityRose uppercase tracking-wider font-mono mb-0.5">⭐ Wish 1</label>
+                                    <input type="text" id="wish1" placeholder="What is your first biggest wish?" class="wish-input w-full bg-transparent text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none" />
+                                </div>
+
+                                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:ring-2 focus-within:ring-charityGold/40 focus-within:border-charityGold transition-all">
+                                    <label class="block text-[9px] font-bold text-purple-600 uppercase tracking-wider font-mono mb-0.5">💖 Wish 2</label>
+                                    <input type="text" id="wish2" placeholder="Something special just for you..." class="wish-input w-full bg-transparent text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none" />
+                                </div>
+
+                                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:ring-2 focus-within:ring-charityGold/40 focus-within:border-charityGold transition-all">
+                                    <label class="block text-[9px] font-bold text-amber-500 uppercase tracking-wider font-mono mb-0.5">🚀 Wish 3</label>
+                                    <input type="text" id="wish3" placeholder="An adventure, hobby, or goal..." class="wish-input w-full bg-transparent text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none" />
+                                </div>
+
+                                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:ring-2 focus-within:ring-charityGold/40 focus-within:border-charityGold transition-all">
+                                    <label class="block text-[9px] font-bold text-charityEmerald uppercase tracking-wider font-mono mb-0.5">🍀 Wish 4</label>
+                                    <input type="text" id="wish4" placeholder="A little comfort or simple treat..." class="wish-input w-full bg-transparent text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none" />
+                                </div>
+
+                                <div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm focus-within:ring-2 focus-within:ring-charityGold/40 focus-within:border-charityGold transition-all">
+                                    <label class="block text-[9px] font-bold text-blue-600 uppercase tracking-wider font-mono mb-0.5">👑 Wish 5</label>
+                                    <input type="text" id="wish5" placeholder="One last wild dream..." class="wish-input w-full bg-transparent text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 pt-4 border-t border-slate-200/60 flex items-center justify-between gap-2">
+                            <span class="text-[9px] font-mono text-slate-400 uppercase tracking-wider">All 5 wishes open via WhatsApp app</span>
+                            <button onclick="processWishSubmission()" class="bg-charityEmerald text-white text-xs font-mono font-bold tracking-widest uppercase px-5 py-3 rounded-xl hover:bg-emerald-600 active:scale-95 transition-all shadow-lg shadow-charityEmerald/20 whitespace-nowrap">
+                                Send Wishes ❤️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: ELEVATED CINEMATIC THANK YOU OVERLAY -->
+            <div id="thankYouScreen" class="thankyou-layer absolute hidden flex-col items-center justify-center text-center max-w-xl px-6 z-30">
+                <h2 class="font-['Great_Vibes'] text-7xl text-charityGold mb-4 animate-pulse">Thank You!</h2>
+                <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-charityGold to-transparent mb-6"></div>
+                <p class="text-sm font-light text-slate-300 leading-relaxed mb-4">
+                    Your beautiful wishes have been preserved! A window has been opened to drop them directly into my WhatsApp message chat.
+                </p>
+                <p class="text-xs text-charityRose font-mono uppercase tracking-widest">
+                    Let's make this year absolutely unforgettable together ✨
+                </p>
+            </div>
+
+        </main>
+        
+        <footer class="text-center py-2 text-[9px] font-mono tracking-widest text-white/20 pointer-events-none">
+            MADE WITH LOVE FOR A VERY SPECIAL OCCASION
+        </footer>
+    </div>
+
+    <!-- MAIN ENGINE LOGIC SYSTEM -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const GRID_SIZE = 6;
+            const tokensPool = [
+                { emoji: "🍬", color: "text-charityRose" },
+                { emoji: "👑", color: "text-charityGold" },
+                { emoji: "🍀", color: "text-charityEmerald" },
+                { emoji: "🔮", color: "text-purple-400" },
+                { emoji: "💖", color: "text-rose-400" }
+            ];
+
+            let score = 0;
+            const TARGET_SCORE = 500;
+            let boardMatrix = [];
+            let chosenTileElement = null;
+            let inputsProcessing = false;
+
+            const gridContainer = document.getElementById("gridContainer");
+            const scoreDisplay = document.getElementById("scoreDisplay");
+            const gameScreen = document.getElementById("gameScreen");
+            const surpriseScreen = document.getElementById("surpriseScreen");
+            const wishJournalCard = document.getElementById("wishJournalCard");
+
+            // Build structural grid
+            function buildLogicalBoard() {
+                gridContainer.innerHTML = "";
+                boardMatrix = [];
+                
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    let rowArray = [];
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        let availableTokens = [...tokensPool];
+                        
+                        // Prevent starting layouts containing matches
+                        if (c >= 2 && rowArray[c-1].type === rowArray[c-2].type) {
+                            availableTokens = availableTokens.filter(t => t.emoji !== rowArray[c-1].type);
+                        }
+                        if (r >= 2 && boardMatrix[r-1][c].type === boardMatrix[r-2][c].type) {
+                            availableTokens = availableTokens.filter(t => t.emoji !== boardMatrix[r-1][c].type);
+                        }
+
+                        const randomPick = availableTokens[Math.floor(Math.random() * availableTokens.length)];
+                        
+                        const tileNode = document.createElement("div");
+                        tileNode.className = `game-token w-full h-full flex items-center justify-center text-3xl select-none bg-white/5 border border-white/5 rounded-xl ${randomPick.color}`;
+                        tileNode.textContent = randomPick.emoji;
+                        tileNode.dataset.row = r;
+                        tileNode.dataset.col = c;
+                        
+                        tileNode.addEventListener("click", handleTileInteractionClick);
+                        
+                        gridContainer.appendChild(tileNode);
+                        rowArray.push({ type: randomPick.emoji, color: randomPick.color, element: tileNode });
+                    }
+                    boardMatrix.push(rowArray);
+                }
+            }
+
+            function handleTileInteractionClick(e) {
+                if (score >= TARGET_SCORE || inputsProcessing) return;
+                
+                const targetTile = e.currentTarget;
+                const r = parseInt(targetTile.dataset.row);
+                const c = parseInt(targetTile.dataset.col);
+
+                if (!chosenTileElement) {
+                    chosenTileElement = targetTile;
+                    chosenTileElement.classList.add("token-selected");
+                } else {
+                    const prevR = parseInt(chosenTileElement.dataset.row);
+                    const prevC = parseInt(chosenTileElement.dataset.col);
+
+                    const isAdjacent = (Math.abs(r - prevR) === 1 && c === prevC) || (Math.abs(c - prevC) === 1 && r === prevR);
+
+                    if (isAdjacent) {
+                        chosenTileElement.classList.remove("token-selected");
+                        executeMatrixSwap(prevR, prevC, r, c);
+                        chosenTileElement = null;
+                    } else {
+                        chosenTileElement.classList.remove("token-selected");
+                        chosenTileElement = targetTile;
+                        chosenTileElement.classList.add("token-selected");
+                    }
+                }
+            }
+
+            function executeMatrixSwap(r1, c1, r2, c2) {
+                inputsProcessing = true;
+                const t1 = boardMatrix[r1][c1];
+                const t2 = boardMatrix[r2][c2];
+
+                // Perform core matrix array index updates
+                boardMatrix[r1][c1] = t2;
+                boardMatrix[r2][c2] = t1;
+
+                t1.element.dataset.row = r2;
+                t1.element.dataset.col = c2;
+                t2.element.dataset.row = r1;
+                t2.element.dataset.col = c1;
+
+                renderVisualPositionSync();
+
+                setTimeout(() => {
+                    let hasMatches = evaluateMatchesAndProcess();
+                    if (!hasMatches) {
+                        // Revert matrix assignment if invalid move
+                        boardMatrix[r1][c1] = t1;
+                        boardMatrix[r2][c2] = t2;
+                        t1.element.dataset.row = r1;
+                        t1.element.dataset.col = c1;
+                        t2.element.dataset.row = r2;
+                        t2.element.dataset.col = c2;
+                        renderVisualPositionSync();
+                        inputsProcessing = false;
+                    }
+                }, 250);
+            }
+
+            function renderVisualPositionSync() {
+                gridContainer.innerHTML = "";
+                for(let r=0; r<GRID_SIZE; r++) {
+                    for(let c=0; c<GRID_SIZE; c++) {
+                        gridContainer.appendChild(boardMatrix[r][c].element);
+                    }
+                }
+            }
+
+            function evaluateMatchesAndProcess() {
+                let matchedCoordinates = [];
+
+                // Horizontal match sweeps
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE - 2; c++) {
+                        let baseType = boardMatrix[r][c].type;
+                        if (baseType && baseType === boardMatrix[r][c+1].type && baseType === boardMatrix[r][c+2].type) {
+                            matchedCoordinates.push({r: r, c: c}, {r: r, c: c+1}, {r: r, c: c+2});
+                        }
+                    }
+                }
+
+                // Vertical match sweeps
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    for (let r = 0; r < GRID_SIZE - 2; r++) {
+                        let baseType = boardMatrix[r][c].type;
+                        if (baseType && baseType === boardMatrix[r+1][c].type && baseType === boardMatrix[r+2][c].type) {
+                            matchedCoordinates.push({r: r, c: c}, {r: r+1, c: c}, {r: r+2, c: c});
+                        }
+                    }
+                }
+
+                if (matchedCoordinates.length > 0) {
+                    let uniqueMatches = Array.from(new Set(matchedCoordinates.map(JSON.stringify)), JSON.parse);
+                    
+                    uniqueMatches.forEach(pos => {
+                        const cell = boardMatrix[pos.r][pos.c];
+                        if(cell.type !== null) {
+                            cell.element.style.opacity = "0";
+                            cell.element.style.transform = "scale(0)";
+                            const rect = cell.element.getBoundingClientRect();
+                            spawnPopSparkleFlare(rect.left + rect.width/2, rect.top + rect.height/2);
+                            cell.type = null;
+                        }
+                    });
+
+                    score += uniqueMatches.length * 15;
+                    scoreDisplay.textContent = score;
+
+                    setTimeout(() => {
+                        dropBoardTokensGravity();
+                    }, 250);
+
+                    return true;
+                }
+                return false;
+            }
+
+            function dropBoardTokensGravity() {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    for (let r = GRID_SIZE - 1; r >= 0; r--) {
+                        if (boardMatrix[r][c].type === null) {
+                            for (let searchR = r - 1; searchR >= 0; searchR--) {
+                                if (boardMatrix[searchR][c].type !== null) {
+                                    let temp = boardMatrix[r][c];
+                                    boardMatrix[r][c] = boardMatrix[searchR][c];
+                                    boardMatrix[searchR][c] = temp;
+                                    
+                                    boardMatrix[r][c].element.dataset.row = r;
+                                    boardMatrix[searchR][c].element.dataset.row = searchR;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    for (let r = 0; r < GRID_SIZE; r++) {
+                        if (boardMatrix[r][c].type === null) {
+                            const randomPick = tokensPool[Math.floor(Math.random() * tokensPool.length)];
+                            boardMatrix[r][c].type = randomPick.emoji;
+                            boardMatrix[r][c].color = randomPick.color;
+                            
+                            const el = boardMatrix[r][c].element;
+                            el.className = `game-token w-full h-full flex items-center justify-center text-3xl select-none bg-white/5 border border-white/5 rounded-xl ${randomPick.color}`;
+                            el.textContent = randomPick.emoji;
+                            el.style.opacity = "1";
+                            el.style.transform = "scale(1)";
+                        }
+                    }
+                }
+
+                renderVisualPositionSync();
+
+                setTimeout(() => {
+                    if (evaluateMatchesAndProcess()) {
+                        evaluateWinningThreshold();
+                    } else {
+                        inputsProcessing = false;
+                        evaluateWinningThreshold();
+                    }
+                }, 250);
+            }
+
+            function evaluateWinningThreshold() {
+                if (score >= TARGET_SCORE) {
+                    inputsProcessing = true;
+                    document.getElementById("targetStatusText").textContent = "Unlocked!";
+                    document.getElementById("targetStatusText").className = "text-charityGold font-bold animate-pulse";
+                    
+                    setTimeout(() => {
+                        gameScreen.style.transform = "translateZ(-400px) rotateX(20deg)";
+                        gameScreen.style.opacity = "0";
+                        
+                        setTimeout(() => {
+                            gameScreen.style.display = "none";
+                            surpriseScreen.style.display = "flex";
+                            
+                            setTimeout(() => {
+                                wishJournalCard.classList.add("active");
+                                triggerExplosionShower(35);
+                            }, 50);
+                        }, 600);
+                    }, 500);
+                }
+            }
+
+            function spawnPopSparkleFlare(x, y) {
+                const particle = document.createElement("div");
+                particle.className = "sparkle-flare text-lg";
+                particle.textContent = "✨";
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                
+                particle.style.setProperty('--tw-tx', `${(Math.random() * 120) - 60}px`);
+                particle.style.setProperty('--tw-ty', `${(Math.random() * 120) - 60}px`);
+                
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 700);
+            }
+
+            buildLogicalBoard();
+        });
+
+        function triggerExplosionShower(count) {
+            const symbols = ['✨', '🎈', '🎉', '💖', '👑', '🎂', '🥳'];
+            for (let i = 0; i < count; i++) {
+                const element = document.createElement("span");
+                element.className = "fixed text-3xl pointer-events-none select-none z-50 transition-all duration-1000 opacity-0";
+                element.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                
+                element.style.left = "50%";
+                element.style.top = "50%";
+                document.body.appendChild(element);
+
+                setTimeout(() => {
+                    element.style.transform = `translate(${(Math.random() * 400) - 200}px, ${(Math.random() * -450) - 50}px) scale(${(Math.random() * 0.6) + 1})`;
+                    element.style.opacity = "1";
+                }, 20);
+
+                setTimeout(() => {
+                    element.style.opacity = "0";
+                    setTimeout(() => element.remove(), 1000);
+                }, 900);
+            }
+        }
+
+        // WhatsApp Submission & Final 3D Layout Transition
+        function processWishSubmission() {
+            const w1 = document.getElementById("wish1").value.trim() || "Empty Wish";
+            const w2 = document.getElementById("wish2").value.trim() || "Empty Wish";
+            const w3 = document.getElementById("wish3").value.trim() || "Empty Wish";
+            const w4 = document.getElementById("wish4").value.trim() || "Empty Wish";
+            const w5 = document.getElementById("wish5").value.trim() || "Empty Wish";
+
+            // 1. REPLACE THIS STRING WITH YOUR WHATSAPP PHONE NUMBER (Include Country Code, No Spaces/Dashes)
+            // Example: "919876543210"
+            const whatsappNumber = "9360493470"; 
+
+            // 2. Format a highly organized template for WhatsApp text engine message body
+            const plainTextText = 
+                "✨ *MY 5 BIRTHDAY WISHES* ✨\n\n" +
+                "⭐ *Wish 1:* " + w1 + "\n" +
+                "💖 *Wish 2:* " + w2 + "\n" +
+                "🚀 *Wish 3:* " + w3 + "\n" +
+                "🍀 *Wish 4:* " + w4 + "\n" +
+                "👑 *Wish 5:* " + w5 + "\n\n" +
+                "Locked inside the Matrix vault! 🎁";
+
+            const encodedMessage = encodeURIComponent(plainTextText);
+
+            // 3. Fallback Clipboard Copy Engine Execution
+            try {
+                const tempTextarea = document.createElement("textarea");
+                tempTextarea.value = plainTextText;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempTextarea);
+            } catch (err) {
+                console.log("Clipboard fallback copy skipped or unsupported");
+            }
+
+            // 4. Open WhatsApp layout redirect trigger
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+
+            // 5. Kinematically rotate the layout away into a 3D thank-you panel sequence
+            const wishJournalCard = document.getElementById("wishJournalCard");
+            const surpriseScreen = document.getElementById("surpriseScreen");
+            const thankYouScreen = document.getElementById("thankYouScreen");
+            const mainHeader = document.getElementById("mainHeader");
+
+            wishJournalCard.style.transform = "rotateY(90deg) translateZ(-200px) scale(0.7)";
+            wishJournalCard.style.opacity = "0";
+            mainHeader.style.opacity = "0";
+            mainHeader.style.transform = "translateY(-20px)";
+
+            setTimeout(() => {
+                surpriseScreen.style.display = "none";
+                thankYouScreen.style.display = "flex";
+                
+                setTimeout(() => {
+                    thankYouScreen.classList.add("active");
+                    triggerExplosionShower(40);
+                }, 50);
+            }, 800);
+        }
+    </script>
+</body>
+</html>
